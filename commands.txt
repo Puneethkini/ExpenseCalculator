@@ -1,0 +1,152 @@
+Aussume that SQLite is installed at location C:\SQLite\sqlite-tools-win32-x86-3240000
+Open the command prompt and type cd C:/SQLite/sqlite-tools-win32-x86-3240000
+Next type sqlite3.exe and you are in the sqlite command prompt
+All SQL queries end with semicolon
+All SQLite commands doesnt contain a terminating semicolon
+
+SQLite commands
+.databases - will list all the database names
+.tables - will list all the tables
+
+Creating databases
+Creating databases is simple. Enter SQLite command
+sqlite3 db_name.db
+creates a database in current directory.
+
+Creating tables
+Example create table is as below
+CREATE TABLE COMPANY(
+   ID INT PRIMARY KEY     NOT NULL,
+   NAME           TEXT    NOT NULL,
+   AGE            INT     NOT NULL,
+   ADDRESS        CHAR(50),
+   SALARY         REAL
+);
+
+You can specify a field is NOT NULL, field can be primary key
+
+After the above create table query you can verify if the table is created correctly by running .tables command
+
+Inserting values in to table
+Use the below kind of SQL syntax to insert records in to the table
+INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)
+VALUES (1, 'Paul', 32, 'California', 20000.00 );
+
+Selecting rows from SQL table
+SELECT column1, column2, columnN FROM table_name; or SELECT * FROM table_name;
+You can choose any style based on your requirement
+
+Updating a record:
+UPDATE COMPANY SET ADDRESS = 'Texas' WHERE ID = 6;
+or you can use below to set multiple column values
+UPDATE COMPANY SET ADDRESS = 'Texas', SALARY = 20000.00 where ID=6;
+
+Foriegn key:
+Primary key in 1 tablecan be foriegn key in the second table, establishing  relationship between 2 tables. Consider the below
+CREATE TABLE CUSTOMERS(
+   ID   INT              NOT NULL,
+   NAME VARCHAR (20)     NOT NULL,
+   AGE  INT              NOT NULL,
+   ADDRESS  CHAR (25) ,
+   SALARY   DECIMAL (18, 2),       
+   PRIMARY KEY (ID)
+);
+
+CREATE TABLE ORDERS (
+   ID          INT        NOT NULL,
+   DATE        DATETIME, 
+   CUSTOMER_ID INT references CUSTOMERS(ID),
+   AMOUNT     double,
+   PRIMARY KEY (ID)
+);
+Here ID is primary key in CUSTOMERS whereas foriegn key in ORDERS table
+
+If you want to establish multiple column constraint on primary key then use the below kind of syntax
+CREATE TABLE CUSTOMERS(
+   ID   INT              NOT NULL,
+   NAME VARCHAR (20)     NOT NULL,
+   AGE  INT              NOT NULL,
+   ADDRESS  CHAR (25) ,
+   SALARY   DECIMAL (18, 2),        
+   PRIMARY KEY (ID, NAME)
+);
+
+Automatically inserting the next rownumber in SQL insert query
+To accomplish this be smart while creating the table and use a syntax similiar to the below
+CREATE TABLE Persons (
+    ID integer primary key AUTOINCREMENT,
+    LastName varchar(255) NOT NULL,
+    FirstName varchar(255),
+    Age int,
+    PRIMARY KEY (ID)
+);
+By default ID starts with 1 and increments by 1 each time an insert is performed.
+
+Selecting middle records within a range in SQL
+Try out the below query
+SELECT * FROM users LIMIT 1 OFFSET 5132;
+If we need records 4,5,6 from table Income then use the below query
+Select * from Income LIMIT 3 OFFSET 3;
+
+C++/QT operations for SQLite database
+
+To open database connection and check if sucessfully opened you need the below set of statements
+
+QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+db.setDatabaseName("C:/SQLite/sqlite-tools-win32-x86-3240000/company1.db");
+if(!db.open())
+{
+    QMessageBox::critical(0, QObject::tr("Database Error"),
+	db.lastError().text());
+    return false;
+}
+
+Finally before the application is to be closed you need to close the QDatabase object.
+
+Once connection is sucessfully established you can run the queries independently of the QSqlDatabase object reference
+bool routine1 ()
+{
+    QSqlQuery query;
+    query.exec("create table person (id int primary key, firstname varchar(20), lastname varchar(20))");
+    return true;
+}
+
+Below is a example of how you can scroll through the result set and store data read in variables
+QSqlQuery query("SELECT country FROM artist");
+    while (query.next()) {
+        QString country = query.value(0).toString();
+        doSomething(country);
+    }
+	
+To check if the query run was sucessful check the isActive method value. QSqldatabase::lastError() call will give the message of last error.
+
+If you are unsure of the index of the column try the below syntax
+QSqlQuery query("SELECT * FROM artist");
+    int fieldNo = query.record().indexOf("country");
+    while (query.next()) {
+        QString country = query.value(fieldNo).toString();
+        doSomething(country);
+    }
+	
+If supplying value to the query up front is difficult, prepare the query in stages and bind to variables using the below approach
+QSqlQuery query;
+    query.prepare("INSERT INTO person (id, forename, surname) "
+                  "VALUES (:id, :forename, :surname)");
+    query.bindValue(":id", 1001);
+    query.bindValue(":forename", "Bart");
+    query.bindValue(":surname", "Simpson");
+    query.exec();
+
+Below presented is another alternative
+ QSqlQuery query;
+    query.prepare("INSERT INTO person (id, forename, surname) "
+                  "VALUES (?, ?, ?)");
+    query.addBindValue(1001);
+    query.addBindValue("Bart");
+    query.addBindValue("Simpson");
+    query.exec();	
+	
+If you need to get the number of rows returned from query execution use QSqlQuery::size(). Guaranteed to work for all select queries
+
+
+Now you have everything you need to get started with SQLite and Qt database concepts
